@@ -4,22 +4,78 @@ var buffer = require('buffer');
 // creating a cloud socket
 var cloud = udp.createSocket('udp4');
 
-//buffer msg
-var data = Buffer.from('siddheshrane');
+function retrieve_flightNo(buffer)
+{
+	var buff = buffer.slice(0,1);
+	return buff;
+}
+var fs = require("fs");
 
+function writeToFile(msg)
+{
+
+   console.log("Going to write into file");
+   console.log("Asynchronous read: " );
+   console.log(msg);
+   fs.writeFile('input.txt',msg, function(err) {
+     if (err) {
+        return console.error(err);
+     }
+     console.log("Data written successfully!");
+   });
+   console.log("Let's read newly written data");
+   fs.readFile('input.txt', function (err, data) {
+      if (err) {
+         return console.error(err);
+      }
+      console.log("Asynchronous read: " );
+      console.log(data);
+      return data ;
+   });
+}
+function readToFile(){
+
+
+}
+//buffer msg
+var data = Buffer.from('...');
+var flight4 = Buffer.from([4]);
+var flight5 = Buffer.from([5]);
+var certificate = Buffer.from('...');
 cloud.on('message',function(msg,info){
-  console.log('Data received from server : ' + msg.toString());
+  var flight = retrieve_flightNo(msg) ;
+  console.log('Data received from server : ');
+  console.log(flight);
   console.log('Received %d bytes from %s:%d\n',msg.length, info.address, info.port);
 
-  //sending msg
-    cloud.send(msg,info.port,'localhost',function(error){
-      if(error){
-        cloud.close();
-      }else{
-        console.log('Data sent !!!');
-      }
-    });
+  if(flight.equals(flight4)){
+      certificate=msg ;
+      writeToFile(msg);
+      console.log("certificate stored in cloud");
+  }
+  if(flight.equals(flight5)){
+    var buffer_flight_data = new Buffer([7]);
+    console.log("Let's read newly written data");
+    fs.readFile('input.txt', function (err, data) {
+         if (err) {
+            return console.error(err);
+         }
+         console.log("Asynchronous read: " );
+         console.log(data);
 
+        certificate= Buffer.concat([buffer_flight_data,data]);
+        cloud.send(certificate,info.port,'localhost',function(error){
+          if(error){
+            console.log('!Data sent !!!');
+            console.log('certificate');
+            server.close();
+          }else{
+            console.log('Data sent !!!');
+            console.log('certificate');
+          }
+        });
+    });
+  }
 });
 
 //emits when socket is ready and listening for datagram msgs
